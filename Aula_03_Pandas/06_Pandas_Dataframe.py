@@ -5,16 +5,17 @@
 
 import pandas as pd
 
-alunos_df = pd.read_csv("../Persistencia/Aula_03_Pandas/alunos.csv")
+alunos_df = pd.read_csv("../Persistencia/Aula_03_Pandas/arquivos/alunos.csv")
 
 # Aluno com a nota máxima
 nota_maxima = alunos_df["Nota"].max()
 print("Nota Máxima : ",nota_maxima)
-
 #print(alunos_df["Nota"] == nota_maxima)
+
 alunos_nota_maxima = alunos_df[alunos_df["Nota"] == nota_maxima]
 print(alunos_nota_maxima["Nome"])
 print("###################################")
+
 # Alunos acima da média
 media_notas = alunos_df["Nota"].mean()
 print("Média Geral : ", round(media_notas, 2))

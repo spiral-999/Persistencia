@@ -7,11 +7,10 @@
 # Diana     22          Belo Horizonte
 
 import pandas as pd
-pessoas_df = pd.read_csv("../Persistencia/Aula_03_Pandas/pessoas.csv")
+pessoas_df = pd.read_csv("../Persistencia/Aula_03_Pandas/arquivos/pessoas.csv")
 
 # Exibir apenas as coluna "Nome"
 print(pessoas_df["Nome"])
 
-
 # Exibir as colunas "Nome" e "Cidade"
-print(pessoas_df["Nome", "Cidade"])
+print(pessoas_df[["Nome", "Cidade"]])

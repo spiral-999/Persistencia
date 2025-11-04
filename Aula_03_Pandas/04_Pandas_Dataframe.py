@@ -14,8 +14,9 @@ def situacao_aluno(nota):
     else:
         return "Recuperação"
 
-alunos_df["Situação"] = alunos_df["Nota"].apply(situacao_aluno)
+alunos_df["Situação"] = alunos_df["Nota"].apply(situacao_aluno) # aplica a função situaçao para cada nota
 
 # Modifique a função para que agora crie:
 # A Situação "Aprovado", caso nota > 7
-# A Situação "Reprovado", caso nota 
+# A Situação "Reprovado", caso nota < 4
+# A Situação "Recuperação", caso contrário
