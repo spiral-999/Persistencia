@@ -8,14 +8,16 @@
 
 import pandas as pd
 
-frutas = pd.Series([2.50, 5.60, 6.30], 
-                  index = ["Maça", "Banana", "Abacate"])
+preco_frutas = pd.Series(
+    [2.50, 5.60, 6.30], 
+    index = ["Maça", "Banana", "Abacate"]
+)
 
 print("Usando a forma depreciada:")
-print(frutas[2])
+print(preco_frutas[1])
 
 print("Usando a forma atual(iloc):  ")
-print(frutas.iloc[2])
+print(preco_frutas.iloc[1])
 
 print("Usando o label: ")
-print(frutas["Banana"])
+print(preco_frutas["Banana"])

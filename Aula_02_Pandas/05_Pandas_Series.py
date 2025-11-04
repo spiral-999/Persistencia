@@ -12,14 +12,18 @@
 
 import pandas as pd
 
-notas = pd.Series([9.3, 7.4, 5.6], 
-                  index = ["Matemática", "Biologia", "Geografia"])
+notas = pd.Series(
+    [9.3, 7.4, 5.6], 
+    index = ["Matemática", "Biologia", "Geografia"]
+)
 
 print("Notas Originais: ")
 print(notas)
+
 print("------------------")
 
-notas_extra = notas.add(0.5)
+notas_extra = notas.add(0.5) # adiciona a Series, não modifica os valores originais 
+print("Notas Somadas: ")
 print(notas_extra)
 
 

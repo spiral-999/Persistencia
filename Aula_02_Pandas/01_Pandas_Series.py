@@ -1,10 +1,13 @@
 import pandas as pd
 
-# Série não rotulada(com labels)
-#notas = pd.Series([7.5, 4.6, 9.2, 5.5])
+# Série não rotulada(sem labels)
+# notas = pd.Series([7.5, 4.6, 9.2, 5.5])
 
-notas = pd.Series([7.5, 4.6, 9.2, 5.5], 
-                  index = ["João", "Marcelo", "Maria", "Thaís"])
+notas = pd.Series(
+    [7.5, 4.6, 9.2, 5.5], 
+    index = ["João", "Marcelo", "Maria", "Thaís"]
+)
+
 # Depreciado
 #print(notas[2])
 

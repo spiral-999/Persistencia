@@ -6,7 +6,12 @@
 
 import pandas as pd
 
-notas = pd.Series([9.3, 7.4, 5.6], 
-        index = ["Matemática", "Biologia", "Geografia"])
+notas = pd.Series(
+    [9.3, 7.4, 5.6], 
+    index = ["Matemática", "Biologia", "Geografia"]
+)
 
-print(notas[notas > 7.0])
+print(notas[notas > 7.0]) # filtrando notas maiores que 7 na Series
+# true
+# true 
+# false
