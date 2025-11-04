@@ -1,3 +1,3 @@
 with open("./Aula_01_Arquivos/arquivos/02_alunos.txt", "r") as file:
-    linha = file.read()
-print(linha)
+    arquivo = file.read() # lê o arquivo inteiro
+print(arquivo)

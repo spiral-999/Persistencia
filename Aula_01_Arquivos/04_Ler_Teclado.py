@@ -1,7 +1,7 @@
 import sys
 
-linha = sys.stdin.readline()
+linha = sys.stdin.readline() # lê a linha a partir do teclado
 
 while linha:
-    print("-->" + linha.strip() + "<--")
-    linha = sys.stdin.readline()
+    print("-->" + linha.strip() + "<--") # remove os espaços em branco
+    linha = sys.stdin.readline() # pula para a próxima
