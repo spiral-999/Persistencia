@@ -8,9 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware # permitir a comunição com 
 # uvicorn main:app --reload
 
 CSV_FILE = "filmes.csv"
-lock = asyncio.Lock()
+lock = asyncio.Lock() # locka o arquivo para travar mudanças ao mesmo tempo
 
-def gerar_dados_iniciais():
+def gerar_dados_iniciais(): # dataframe de dados para inicializar o csv
     dados = [
         {'id': 1, 'nome': 'Evil Dead 2', 'categoria': 'Terror', 'nota_imdb': 7.7},
         {'id': 2, 'nome': 'Pânico', 'categoria': 'Terror', 'nota_imdb': 7.4},
@@ -63,9 +63,9 @@ def gerar_dados_iniciais():
         {'id': 49, 'nome': 'O Grande Hotel Budapeste', 'categoria': 'Comédia', 'nota_imdb': 8.1},
         {'id': 50, 'nome': 'Monty Python e o Cálice Sagrado', 'categoria': 'Comédia', 'nota_imdb': 8.2},
     ]
-    return pd.DataFrame(dados, columns=["id", "nome", "categoria", "nota_imdb"])
+    return pd.DataFrame(dados, columns=["id", "nome", "categoria", "nota_imdb"]) # filmes com id, nome, categoria e nota
 
-def salvar_dados(df: pd.DataFrame):
+def salvar_dados(df: pd.DataFrame): # funcao auxiliar para checar se o id é int, impedir q o pandas salve o index padrao e salvar no csv
     df_para_salvar = df.copy()
     df_para_salvar['id'] = df_para_salvar['id'].astype(int)
     df_para_salvar.to_csv(CSV_FILE, index=False)
@@ -90,7 +90,7 @@ def carregar_dados():
         return df
 
 db = carregar_dados()
-proximo_id = (int(db['id'].max()) + 1) if not db.empty else 1
+proximo_id = (int(db['id'].max()) + 1) if not db.empty else 1 # garante id único p todo elemento novo
 
 class FilmeBase(BaseModel):
     nome: str
@@ -100,50 +100,53 @@ class FilmeBase(BaseModel):
 class Filme(FilmeBase):
     id: int
 
-app = FastAPI(
+app = FastAPI( # /docs para entrar no swagger
     title="Trabalho 1/ API de Filmes",
     description="Lucas Cavalcante & Mateus Lima"
 )
 
-app.add_middleware(
+app.add_middleware( # configuração do CORS para permitir chamadas de origens diferentes, html e python nesse caso
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # permite conexão de toda origem
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"], # permite todo tipo de método
     allow_headers=["*"],
 )
 
+# post para criar filmes
 @app.post("/filmes", response_model=Filme, status_code=status.HTTP_201_CREATED)
 async def cadastrar_filme(filme: FilmeBase):
     global proximo_id, db
-    async with lock:
+    async with lock: # por ser um post assincrono, o lock é interessante
         novo_filme = filme.model_dump()
         novo_filme['id'] = proximo_id        
         novo_filme_df = pd.DataFrame([novo_filme])
         db = pd.concat([db, novo_filme_df], ignore_index=True)
-        
         salvar_dados(db)         
         proximo_id += 1
         return novo_filme
 
+# get para retornar todos os filmes como uma lista
 @app.get("/filmes", response_model=list[Filme])
 def retornar_todos_filmes():
     return db.to_dict('records')
 
+# get para retornar um único filme usando o id
 @app.get("/filmes/{id}", response_model=Filme)
 def retornar_filme_por_id(id: int):
     filme = db[db['id'].astype(int) == id]
     if filme.empty:
-        raise HTTPException(
+        raise HTTPException( # levanta uma excessao http se nao achar o filme
             status_code=status.HTTP_404_NOT_FOUND, 
             detail=f"Filme com id {id} não encontrado"
         )
-    return filme.to_dict('records')[0]
+    return filme.to_dict('records')[0] # retorna o primeiro que achar com [0]
 
+# put para atualizar os dados pelo id do filme
 @app.put("/filmes/{id}", response_model=Filme)
 async def atualizar_filme(id: int, filme_atualizado: FilmeBase):
     global db
-    async with lock:
+    async with lock: # lock também é interessante aqui, por ser uma modificação no global no "banco de dados"
         indice = db.index[db['id'].astype(int) == id].tolist()
         if not indice:
             raise HTTPException(
@@ -159,10 +162,11 @@ async def atualizar_filme(id: int, filme_atualizado: FilmeBase):
         filme_atualizado_completo = db.loc[idx].to_dict()
         return filme_atualizado_completo
 
+# delete para apagar o filme pelo id
 @app.delete("/filmes/{id}")
 async def remover_filme(id: int):
     global db
-    async with lock:
+    async with lock: # lock para garantir a exclusão
         indice = db.index[db['id'].astype(int) == id].tolist()
         if not indice:
             raise HTTPException(
@@ -170,11 +174,12 @@ async def remover_filme(id: int):
                 detail=f"Filme com id {id} não encontrado"
             )
         idx = indice[0]
-        db = db.drop(idx).reset_index(drop=True)
-        salvar_dados(db) 
+        db = db.drop(idx).reset_index(drop=True) # organiza os indices internos
+        salvar_dados(db) # salva com a linha removida
         
         return {"message": "Filme removido com sucesso"}
 
+# get para obter a media, pega todos os campos nota e aplica .mean() com 2 digitos dps da virgula
 @app.get("/filmes/stats/media-notas")
 def obter_media_notas():
     if db.empty:
@@ -182,6 +187,7 @@ def obter_media_notas():
     media = db['nota_imdb'].mean()
     return {"media_notas": round(media, 2)}
 
+# get para obter a maior nota, simplesmente um .max no campo nota
 @app.get("/filmes/stats/maior-nota", response_model=list[Filme])
 def obter_filme_maior_nota():
     if db.empty:
@@ -193,6 +199,7 @@ def obter_filme_maior_nota():
     filme = db[db['nota_imdb'] == maior_nota]
     return filme.to_dict('records')
 
+# igualmente, simplesmente um .min no campo de notas
 @app.get("/filmes/stats/menor-nota", response_model=list[Filme])
 def obter_filme_menor_nota():
     if db.empty:
@@ -204,6 +211,7 @@ def obter_filme_menor_nota():
     filme = db[db['nota_imdb'] == menor_nota]
     return filme.to_dict('records')
 
+# get para pegar todos os filmes >= a media anterior
 @app.get("/filmes/stats/acima-media", response_model=list[Filme])
 def obter_filmes_acima_media():
     if db.empty:
@@ -212,6 +220,7 @@ def obter_filmes_acima_media():
     filmes_acima_media = db[db['nota_imdb'] >= media]
     return filmes_acima_media.to_dict('records')
 
+# get para pegar todos os filmes < a media anterior
 @app.get("/filmes/stats/abaixo-media", response_model=list[Filme])
 def obter_filmes_abaixo_media():
     if db.empty:
