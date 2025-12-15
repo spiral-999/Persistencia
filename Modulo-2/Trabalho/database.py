@@ -1,30 +1,17 @@
-import sqlite3
-from sqlmodel import create_engine, Session
-from sqlalchemy import event, Engine
-from dotenv import load_dotenv
-import logging
 import os
+from sqlmodel import create_engine, Session
+from dotenv import load_dotenv
 
-# Carregar variáveis do arquivo .env
 load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Configurar o logger (opcional, ajuda a ver o SQL no terminal)
-logging.basicConfig()
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL não definida no .env")
 
-# Configuração do banco de dados
-# Garante que se não houver variável, usa um default para não quebrar (opcional)
-db_url = os.getenv("DATABASE_URL", "sqlite:///./catalogo_cinema.db")
-engine = create_engine(db_url)
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
-def get_session() -> Session:
+engine = create_engine(DATABASE_URL, echo=True, connect_args=connect_args)
+
+def get_session():
     with Session(engine) as session:
         yield session
-
-# Configuração específica para SQLite (Foreign Keys)
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, sqlite3.Connection):  # somente para o SQLite
-       cursor = dbapi_connection.cursor()
-       cursor.execute("PRAGMA foreign_keys=ON")
-       cursor.close()

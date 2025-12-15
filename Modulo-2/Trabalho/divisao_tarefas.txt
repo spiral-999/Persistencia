@@ -1,0 +1,5 @@
+Mateus: fiquei na infraestrutura(aproveitada do github da disciplina) e modelagem, criei os modelos, 
+configurei o banco no neon.tech, fiquei também nas migrações do alembic(sqlite não facilitou), 
+povoei o banco com meus filmes favoritos e fiz o mermaid
+
+Lucas: fez os arquivos de rotas, implementou a lógica do CRUD, os filtros e as rotas de associação

@@ -2,18 +2,45 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select, func
 from typing import List, Optional
 from database import get_session
-from modelos import Filme, Diretor, Ator, FilmeAtor # Importando do models/__init__.py
+from modelos.filme import Filme
+from modelos.ator import Ator
+from modelos.filme_ator import FilmeAtor
 
 router = APIRouter(prefix="/filmes", tags=["Filmes"])
 
-# --- CRUD BÁSICO ---
-
-@router.post("/", response_model=Filme)
+# CRUD
+@router.post("/", response_model=Filme, status_code=201)
 def criar_filme(filme: Filme, session: Session = Depends(get_session)):
     session.add(filme)
-    session.commit()
-    session.refresh(filme)
-    return filme
+    try:
+        session.commit()
+        session.refresh(filme)
+        return filme
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar filme: {e}")
+
+@router.get("/", response_model=List[Filme])
+def listar_filmes(
+    session: Session = Depends(get_session),
+    titulo: Optional[str] = Query(None, description="Busca por parte do título"),
+    genero: Optional[str] = Query(None, description="Filtro exato de gênero"),
+    ano: Optional[int] = Query(None, description="Filtro por ano"),
+    nota_minima: Optional[float] = Query(None, description="Nota mínima IMDB"),
+    offset: int = 0,
+    limit: int = 10
+):
+    query = select(Filme)
+    if titulo:
+        query = query.where(Filme.titulo.contains(titulo))
+    if genero:
+        query = query.where(Filme.genero == genero)
+    if ano:
+        query = query.where(Filme.ano == ano)
+    if nota_minima:
+        query = query.where(Filme.nota >= nota_minima)
+        
+    return session.exec(query.offset(offset).limit(limit)).all()
 
 @router.get("/{filme_id}", response_model=Filme)
 def obter_filme(filme_id: int, session: Session = Depends(get_session)):
@@ -46,67 +73,32 @@ def deletar_filme(filme_id: int, session: Session = Depends(get_session)):
     session.commit()
     return {"message": "Filme deletado com sucesso"}
 
-# --- CONSULTAS REQUERIDAS & FILTROS ---
-
-# Requisito: Listagens filtradas, Busca por texto, Filtro por ano, Classificação
-@router.get("/", response_model=List[Filme])
-def listar_filmes(
-    session: Session = Depends(get_session),
-    titulo: Optional[str] = Query(None, description="Busca por parte do título"),
-    ano: Optional[int] = Query(None, description="Filtro exato de ano"),
-    genero: Optional[str] = Query(None, description="Filtro exato de gênero"),
-    ordenar_por_ano: bool = Query(False, description="Se verdadeiro, ordena do mais recente para o antigo"),
-    offset: int = 0,
-    limit: int = 10
-):
-    query = select(Filme)
-
-    if titulo:
-        query = query.where(Filme.titulo.contains(titulo))
-    if ano:
-        query = query.where(Filme.ano == ano)
-    if genero:
-        query = query.where(Filme.genero == genero)
-    
-    if ordenar_por_ano:
-        query = query.order_by(Filme.ano.desc())
-    
-    query = query.offset(offset).limit(limit)
-    return session.exec(query).all()
-
-# Requisito: Agregações e contagens
-@router.get("/geral/contagem")
-def contar_filmes(session: Session = Depends(get_session)):
-    """Retorna o número total de filmes cadastrados."""
-    count = session.exec(select(func.count()).select_from(Filme)).one()
-    return {"total_filmes": count}
-
-# --- RELACIONAMENTO N:N (Filme <-> Ator) ---
-
+# Relacionamento N:N
 @router.post("/{filme_id}/atores/{ator_id}")
 def adicionar_ator_ao_filme(filme_id: int, ator_id: int, session: Session = Depends(get_session)):
-    """Cria a relação entre um Filme e um Ator."""
     filme = session.get(Filme, filme_id)
     ator = session.get(Ator, ator_id)
-    
     if not filme or not ator:
         raise HTTPException(status_code=404, detail="Filme ou Ator não encontrado")
     
-    # Cria a ligação na tabela associativa
+    link_existente = session.exec(
+        select(FilmeAtor).where(FilmeAtor.filme_id == filme_id, FilmeAtor.ator_id == ator_id)
+    ).first()
+    
+    if link_existente:
+        raise HTTPException(status_code=400, detail="Ator já está neste filme")
+
     link = FilmeAtor(filme_id=filme_id, ator_id=ator_id)
     session.add(link)
-    try:
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise HTTPException(status_code=400, detail="Este ator já está associado a este filme")
-        
+    session.commit()
     return {"message": f"Ator {ator.nome} adicionado ao filme {filme.titulo}"}
 
-@router.get("/{filme_id}/atores", response_model=List[Ator])
-def listar_atores_do_filme(filme_id: int, session: Session = Depends(get_session)):
-    """Lista todos os atores de um filme específico."""
-    filme = session.get(Filme, filme_id)
-    if not filme:
-        raise HTTPException(status_code=404, detail="Filme não encontrado")
-    return filme.atores
+# Estatísticas
+@router.get("/stats/geral")
+def estatisticas_filmes(session: Session = Depends(get_session)):
+    total_filmes = session.exec(select(func.count(Filme.id))).one()
+    media_notas = session.exec(select(func.avg(Filme.nota))).one()
+    return {
+        "total_filmes": total_filmes,
+        "media_notas_imdb": round(media_notas, 2) if media_notas else 0
+    }
