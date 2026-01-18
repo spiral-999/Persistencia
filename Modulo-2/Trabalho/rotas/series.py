@@ -6,6 +6,7 @@ from modelos.serie import Serie
 from modelos.episodio import Episodio
 from modelos.ator import Ator
 from modelos.serie_ator import SerieAtor
+from modelos.serie import Serie, SerieRead
 
 router = APIRouter(prefix="/series", tags=["Séries"])
 
@@ -22,7 +23,7 @@ def criar_serie(serie: Serie, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail=f"Erro ao criar série: {e}")
 
 # READ com filtros
-@router.get("/", response_model=List[Serie])
+@router.get("/", response_model=List[SerieRead])
 def listar_series(
     session: Session = Depends(get_session),
     titulo: Optional[str] = Query(None, description="Filtro por título"),
@@ -43,7 +44,7 @@ def listar_series(
     return session.exec(query.offset(offset).limit(limit)).all()
 
 # READ detalhes da série e episódios
-@router.get("/{serie_id}", response_model=Serie)
+@router.get("/{serie_id}", response_model=SerieRead)
 def obter_serie(serie_id: int, session: Session = Depends(get_session)):
     serie = session.get(Serie, serie_id)
     if not serie:

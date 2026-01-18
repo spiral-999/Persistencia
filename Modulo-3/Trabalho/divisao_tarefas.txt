@@ -1,0 +1,11 @@
+MATEUS:
+- Configuração do Cluster no MongoDB Atlas
+- Implementação da dupla conexão, Local x Atlas
+- Adaptação da pasta rotas para o MongoDB
+- Desenvolvimento dos arquivos seed de povoamento
+
+LUCAS:
+- Refatoração completa da pasta de modelos
+- Migração de classes SQLAlchemy para Beanie Documents
+- Substituição de tabelas associativas SQL por listas de referências usando o link
+- Configuração inicial da conexão assíncrona e inicialização do banco no main.py

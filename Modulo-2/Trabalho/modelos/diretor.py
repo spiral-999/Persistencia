@@ -15,3 +15,6 @@ class Diretor(DiretorBase, table=True):
     # relacionamentos do diretor com filmes e series 
     filmes: List["Filme"] = Relationship(back_populates="diretor")
     series: List["Serie"] = Relationship(back_populates="diretor")
+
+class DiretorRead(DiretorBase):
+    id: int

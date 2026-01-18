@@ -5,6 +5,7 @@ from database import get_session
 from modelos.filme import Filme
 from modelos.ator import Ator
 from modelos.filme_ator import FilmeAtor
+from modelos.filme import Filme, FilmeRead
 
 router = APIRouter(prefix="/filmes", tags=["Filmes"])
 
@@ -20,7 +21,7 @@ def criar_filme(filme: Filme, session: Session = Depends(get_session)):
         session.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao salvar filme: {e}")
 
-@router.get("/", response_model=List[Filme])
+@router.get("/", response_model=List[FilmeRead])
 def listar_filmes(
     session: Session = Depends(get_session),
     titulo: Optional[str] = Query(None, description="Busca por parte do título"),
@@ -42,7 +43,7 @@ def listar_filmes(
         
     return session.exec(query.offset(offset).limit(limit)).all()
 
-@router.get("/{filme_id}", response_model=Filme)
+@router.get("/{filme_id}", response_model=FilmeRead)
 def obter_filme(filme_id: int, session: Session = Depends(get_session)):
     filme = session.get(Filme, filme_id)
     if not filme:

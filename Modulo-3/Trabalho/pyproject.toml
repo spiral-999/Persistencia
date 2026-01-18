@@ -1,0 +1,14 @@
+[project]
+name = "trabalho-3"
+version = "0.1.0"
+description = "API de Cinema com FastAPI e MongoDB (Beanie)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.112.0",
+    "uvicorn[standard]>=0.30.0",
+    "beanie>=1.26.0",
+    "motor>=3.6.0,<3.7.0",
+    "pydantic-settings>=2.4.0",
+    "python-dotenv>=1.0.1",
+]

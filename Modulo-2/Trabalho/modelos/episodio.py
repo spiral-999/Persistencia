@@ -17,3 +17,6 @@ class Episodio(EpisodioBase, table=True):
     
     # relacionamentos do episodio
     serie: Optional["Serie"] = Relationship(back_populates="episodios")
+
+class EpisodioRead(EpisodioBase):
+    id: int

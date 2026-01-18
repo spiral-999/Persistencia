@@ -25,3 +25,6 @@ class Ator(AtorBase, table=True):
     # relacionamentos do ator, dois relacionamentos N:N que usam tabelas de ligação
     filmes: List["Filme"] = Relationship(back_populates="atores", link_model=FilmeAtor)
     series: List["Serie"] = Relationship(back_populates="atores", link_model=SerieAtor)
+
+class AtorRead(AtorBase):
+    id: int

@@ -1,6 +1,8 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional, TYPE_CHECKING
 from .filme_ator import FilmeAtor
+from .diretor import DiretorRead
+from .ator import AtorRead
 
 if TYPE_CHECKING:
     from .diretor import Diretor
@@ -19,3 +21,8 @@ class Filme(FilmeBase, table=True):
     # relacionamentos dos filmes com diretor e com atores
     diretor: Optional["Diretor"] = Relationship(back_populates="filmes")
     atores: List["Ator"] = Relationship(back_populates="filmes", link_model=FilmeAtor) #relacionamento N:N, entao usamos a tabela intermediaria para conexão
+
+class FilmeRead(FilmeBase): # modelo de leitura para as consultas aninhadas
+    id: int
+    diretor: Optional[DiretorRead] = None
+    atores: List[AtorRead] = []
